@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'audio.dart';
 import 'game_logic.dart';
 import 'pixel_widgets.dart';
 import 'win_animation.dart';
@@ -45,11 +46,13 @@ class _GameScreenState extends State<GameScreen>
   late final AnimationController _win;
   bool _showOverlay = false;
   Timer? _drawTimer;
+  final _audio = GameAudio();
   final GlobalKey _boardKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    _audio.startBgm();
     _bg = AnimationController(vsync: this, duration: const Duration(seconds: 60))
       ..repeat();
     _win = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
@@ -63,6 +66,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _drawTimer?.cancel();
+    _audio.dispose();
     _bg.dispose();
     _win.dispose();
     super.dispose();
@@ -71,12 +75,22 @@ class _GameScreenState extends State<GameScreen>
   void _tap(int i) {
     if (_state.isOver || _state.board[i] != null) return;
     HapticFeedback.lightImpact();
+    final placed = _state.current;
     final next = _state.play(i);
+    if (identical(next, _state)) return;
+    _audio.startBgm(); // web autoplay: retry on first gesture
+    if (placed == Mark.x) {
+      _audio.placeX();
+    } else {
+      _audio.placeO();
+    }
     setState(() => _state = next);
     if (next.winner != null) {
       HapticFeedback.heavyImpact();
+      _audio.win();
       _win.forward(from: 0);
     } else if (next.isDraw) {
+      _audio.draw();
       _drawTimer?.cancel();
       _drawTimer = Timer(const Duration(milliseconds: 600), () {
         if (mounted && _state.isDraw) setState(() => _showOverlay = true);
@@ -164,6 +178,16 @@ class _GameScreenState extends State<GameScreen>
                               shade: Palette.panelDark,
                               textColor: Palette.ink,
                               onPressed: _resetAll,
+                            ),
+                            const SizedBox(width: 14),
+                            PixelButton(
+                              label: _audio.muted ? 'SFX OFF' : 'SFX ON',
+                              color: Palette.panelLight,
+                              shade: Palette.panelDark,
+                              textColor: Palette.ink,
+                              onPressed: () => setState(
+                                () => _audio.setMuted(!_audio.muted),
+                              ),
                             ),
                           ],
                         ),
