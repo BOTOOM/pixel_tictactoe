@@ -42,10 +42,10 @@ class GameAudio {
   Future<void> win() => _play('win', 0.9);
   Future<void> draw() => _play('draw', 0.9);
 
-  void setMuted(bool m) {
+  Future<void> setMuted(bool m) async {
     muted = m;
     try {
-      _bgm.setVolume(m ? 0 : _bgmVolume);
+      await _bgm.setVolume(m ? 0 : _bgmVolume);
     } catch (_) {}
   }
 

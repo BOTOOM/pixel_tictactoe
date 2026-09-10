@@ -167,11 +167,12 @@ class _GameScreenState extends State<GameScreen>
                           ),
                         ),
                         const SizedBox(height: 22),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 14,
+                          runSpacing: 12,
                           children: [
                             PixelButton(label: 'NEW ROUND', onPressed: _nextRound),
-                            const SizedBox(width: 14),
                             PixelButton(
                               label: 'RESET',
                               color: Palette.panelLight,
@@ -179,15 +180,14 @@ class _GameScreenState extends State<GameScreen>
                               textColor: Palette.ink,
                               onPressed: _resetAll,
                             ),
-                            const SizedBox(width: 14),
                             PixelButton(
                               label: _audio.muted ? 'SFX OFF' : 'SFX ON',
                               color: Palette.panelLight,
                               shade: Palette.panelDark,
                               textColor: Palette.ink,
-                              onPressed: () => setState(
-                                () => _audio.setMuted(!_audio.muted),
-                              ),
+                              onPressed: () => setState(() {
+                                _audio.setMuted(!_audio.muted);
+                              }),
                             ),
                           ],
                         ),
