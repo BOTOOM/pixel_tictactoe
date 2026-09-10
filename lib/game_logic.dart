@@ -15,15 +15,17 @@ class GameState {
   GameState({
     List<Mark?>? board,
     this.current = Mark.x,
+    this.starter = Mark.x,
     this.winner,
     this.winLine,
     this.scoreX = 0,
     this.scoreO = 0,
     this.draws = 0,
-  }) : board = board ?? List<Mark?>.filled(9, null);
+  }) : board = List<Mark?>.unmodifiable(board ?? List<Mark?>.filled(9, null));
 
   final List<Mark?> board;
   final Mark current;
+  final Mark starter;
   final Mark? winner;
   final List<int>? winLine;
   final int scoreX;
@@ -44,6 +46,7 @@ class GameState {
           current: current,
           winner: current,
           winLine: line,
+          starter: starter,
           scoreX: scoreX + (current == Mark.x ? 1 : 0),
           scoreO: scoreO + (current == Mark.o ? 1 : 0),
           draws: draws,
@@ -54,6 +57,7 @@ class GameState {
     return GameState(
       board: next,
       current: current == Mark.x ? Mark.o : Mark.x,
+      starter: starter,
       scoreX: scoreX,
       scoreO: scoreO,
       draws: draws + (full ? 1 : 0),
@@ -61,7 +65,8 @@ class GameState {
   }
 
   GameState nextRound() => GameState(
-        current: winner == null ? current : (winner == Mark.x ? Mark.o : Mark.x),
+        current: starter == Mark.x ? Mark.o : Mark.x,
+        starter: starter == Mark.x ? Mark.o : Mark.x,
         scoreX: scoreX,
         scoreO: scoreO,
         draws: draws,

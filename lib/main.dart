@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -43,6 +44,7 @@ class _GameScreenState extends State<GameScreen>
   late final AnimationController _bg;
   late final AnimationController _win;
   bool _showOverlay = false;
+  Timer? _drawTimer;
   final GlobalKey _boardKey = GlobalKey();
 
   @override
@@ -60,6 +62,7 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   void dispose() {
+    _drawTimer?.cancel();
     _bg.dispose();
     _win.dispose();
     super.dispose();
@@ -74,13 +77,15 @@ class _GameScreenState extends State<GameScreen>
       HapticFeedback.heavyImpact();
       _win.forward(from: 0);
     } else if (next.isDraw) {
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (mounted) setState(() => _showOverlay = true);
+      _drawTimer?.cancel();
+      _drawTimer = Timer(const Duration(milliseconds: 600), () {
+        if (mounted && _state.isDraw) setState(() => _showOverlay = true);
       });
     }
   }
 
   void _nextRound() {
+    _drawTimer?.cancel();
     _win.reset();
     setState(() {
       _showOverlay = false;
@@ -89,6 +94,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _resetAll() {
+    _drawTimer?.cancel();
     _win.reset();
     setState(() {
       _showOverlay = false;

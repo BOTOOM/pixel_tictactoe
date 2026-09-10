@@ -42,5 +42,19 @@ void main() {
     expect(n.board.every((c) => c == null), isTrue);
     expect(n.scoreX, 1);
     expect(n.current, Mark.o);
+
+    var o = GameState();
+    for (final i in [0, 3, 1, 4, 8, 5]) {
+      o = o.play(i);
+    }
+    expect(o.winner, Mark.o);
+    expect(o.winLine, [3, 4, 5]);
+    expect(o.scoreO, 1);
+    expect(o.nextRound().current, Mark.o);
+  });
+
+  test('board is unmodifiable', () {
+    final s = GameState();
+    expect(() => s.board[0] = Mark.x, throwsUnsupportedError);
   });
 }
