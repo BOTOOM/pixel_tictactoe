@@ -10,8 +10,9 @@ val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 val hasReleaseKeystore = keystorePropertiesFile.exists()
 if (hasReleaseKeystore) {
-    keystoreProperties.load(keystorePropertiesFile.inputStream())
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+val allowDebugSigning = providers.gradleProperty("allowDebugSigning").orNull == "true"
 
 android {
     namespace = "dev.edwardiaz.pixel_tictactoe"
@@ -51,10 +52,13 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasReleaseKeystore) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            signingConfig = when {
+                hasReleaseKeystore -> signingConfigs.getByName("release")
+                allowDebugSigning -> signingConfigs.getByName("debug")
+                else -> throw GradleException(
+                    "Release builds need android/key.properties with a release keystore " +
+                        "(or pass -PallowDebugSigning=true for a local, non-distributable build).",
+                )
             }
             isMinifyEnabled = true
             isShrinkResources = true
