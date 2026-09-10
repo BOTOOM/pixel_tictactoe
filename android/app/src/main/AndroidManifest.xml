@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="pixel_tictactoe"
+        android:label="Pixel Tic-Tac-Toe"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
