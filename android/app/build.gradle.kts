@@ -52,19 +52,29 @@ android {
 
     buildTypes {
         release {
-            signingConfig = when {
-                hasReleaseKeystore -> signingConfigs.getByName("release")
-                allowDebugSigning -> signingConfigs.getByName("debug")
-                else -> throw GradleException(
-                    "Release builds need android/key.properties with a release keystore " +
-                        "(or pass -PallowDebugSigning=true for a local, non-distributable build).",
-                )
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
             }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
+            )
+        }
+    }
+}
+
+// Only release artifacts must be signed with the release key; debug builds
+// keep working without a keystore.
+if (!hasReleaseKeystore && !allowDebugSigning) {
+    gradle.taskGraph.whenReady {
+        if (allTasks.any { it.project == project && it.name.contains("Release") }) {
+            throw GradleException(
+                "Release builds need android/key.properties with a release keystore " +
+                    "(or pass -PallowDebugSigning=true for a local, non-distributable build).",
             )
         }
     }
