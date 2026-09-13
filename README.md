@@ -2,6 +2,8 @@
 
 # 🕹️ Pixel Tic-Tac-Toe
 
+<img src="docs/media/icon.png" width="96" alt="App icon" />
+
 **Tic-tac-toe in Flutter with pixel-art looks, chiptune sound and an over-the-top victory celebration.**
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
@@ -23,6 +25,7 @@
 | 🏆 **Epic win** | Screen shake, a golden line sweeping across the winning cells with sparks, flash, pixel confetti with gravity, a bouncing banner with a crown and rainbow text revealed letter by letter. |
 | 🔊 **Chiptune audio** | Descending blip for X, ascending blip for O, victory fanfare, draw motif and a low-volume looping 8-bit background track. `SFX ON/OFF` button. Every sound is generated procedurally by [`tool/gen_sounds.py`](tool/gen_sounds.py). |
 | 🧮 **Scoreboard** | Tracks X wins, O wins and draws; the opening player alternates every round. |
+| 🤖 **CPU opponent** | Play solo against an adaptive AI: it levels up (Rookie → Casual → Smart → Pro → Master) every time you beat it, uses textbook openings (corner/centre openings, opposite-corner reply, the corner trap), forks and, at the top levels, perfect minimax play. |
 | 🪶 **Lightweight** | A single third-party dependency (`audioplayers`). No Internet permission, no ads, no telemetry. |
 
 ## 📸 Screenshots
@@ -53,6 +56,8 @@
 <p align="center">🎥 <a href="docs/media/demo.mp4">Watch the full demo video</a> (launch → win → new round → draw → reset)</p>
 
 ## 📦 Installation
+
+The game opens on a mode-select screen: **2 PLAYERS** shares one device between two humans, **VS CPU** pits you (always X) against the adaptive computer opponent.
 
 ### Android (APK, no store)
 
@@ -95,6 +100,12 @@ Regenerate the sounds (Python standard library only):
 
 ```sh
 python3 tool/gen_sounds.py
+```
+
+Regenerate the app icons — Android launcher + adaptive foreground, web favicon/icons and `docs/media/icon.png` (requires Pillow):
+
+```sh
+python3 tool/gen_icon.py
 ```
 
 ### Release builds
