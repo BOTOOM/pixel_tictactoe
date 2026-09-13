@@ -10,8 +10,9 @@ None: this app runs offline.
 
 ## Setup
 - Export Flutter and Android SDK paths from the repo blueprint.
-- Check `adb devices` first. Reuse a running AVD; otherwise start `emulator -avd pixel_ttt -no-snapshot-load -no-audio`, then `adb wait-for-device`.
-- Run `flutter run -d emulator-5554` in an interactive (`tty: true`) exec session so `R` can hot-restart when code changes. The device ID can differ if more than one emulator is running.
+- Check `adb devices` first and record the selected emulator serial. Reuse a running AVD; otherwise start `emulator -avd pixel_ttt -no-snapshot-load -no-audio` in a separate exec session, obtain its serial from `adb devices`, then run `adb -s <device-id> wait-for-device`.
+- Run `flutter run -d <device-id>` with that serial in an interactive (`tty: true`) exec session so `R` can hot-restart when code changes.
+- The CPU-mode steps below require the VS CPU feature (PR #3); on a checkout without it the app opens straight into the two-player board.
 - Preserve pre-existing local Maven mirror edits. Do not overwrite Gradle files to bypass build issues.
 - Use `wmctrl -l` to find the emulator. If maximize is ignored, resize it explicitly with `wmctrl -ir <id> -e 0,<x>,<y>,<w>,<h>`. Keep the entire phone visible.
 
