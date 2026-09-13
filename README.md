@@ -1,13 +1,129 @@
-# pixel_tictactoe
+<div align="center">
 
-Tres en raya (tic-tac-toe) en Flutter con estilo pixel art y una animación de victoria exagerada
-(sacudida de pantalla, línea dorada, flash, confeti pixel y banner con corona).
+# 🕹️ Pixel Tic-Tac-Toe
 
-Sin dependencias externas: sprites dibujados con `CustomPainter`, fuente Press Start 2P incluida.
+**Tic-tac-toe in Flutter with pixel-art looks, chiptune sound and an over-the-top victory celebration.**
+
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
+[![Platforms](https://img.shields.io/badge/Android%20%7C%20Web-8A2BE2)](#-installation)
+[![Release](https://img.shields.io/github/v/release/BOTOOM/pixel_tictactoe?color=FFD447&label=APK)](https://github.com/BOTOOM/pixel_tictactoe/releases/latest)
+
+<img src="docs/media/win.gif" width="260" alt="Win animation" />
+
+</div>
+
+---
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🎨 **100 % pixel art** | 8×8 sprites for X, O and the crown drawn with `CustomPainter` (no anti-aliasing), 8-bit beveled panels, dithered starfield background, CRT scanlines and the *Press Start 2P* font. |
+| 🏆 **Epic win** | Screen shake, a golden line sweeping across the winning cells with sparks, flash, pixel confetti with gravity, a bouncing banner with a crown and rainbow text revealed letter by letter. |
+| 🔊 **Chiptune audio** | Descending blip for X, ascending blip for O, victory fanfare, draw motif and a low-volume looping 8-bit background track. `SFX ON/OFF` button. Every sound is generated procedurally by [`tool/gen_sounds.py`](tool/gen_sounds.py). |
+| 🧮 **Scoreboard** | Tracks X wins, O wins and draws; the opening player alternates every round. |
+| 🪶 **Lightweight** | A single third-party dependency (`audioplayers`). No Internet permission, no ads, no telemetry. |
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="docs/media/01-board.png" width="180" alt="Empty board" />
+  <img src="docs/media/02-gameplay.png" width="180" alt="Game in progress" />
+  <img src="docs/media/03-win.png" width="180" alt="X wins" />
+  <img src="docs/media/04-draw.png" width="180" alt="Draw" />
+  <img src="docs/media/05-next-round.png" width="180" alt="Next round" />
+</p>
+
+## 🎬 How it plays
+
+<table align="center">
+  <tr>
+    <th>X / O turns</th>
+    <th>Victory!</th>
+    <th>Draw</th>
+  </tr>
+  <tr>
+    <td><img src="docs/media/gameplay.gif" width="220" alt="Placing marks" /></td>
+    <td><img src="docs/media/win.gif" width="220" alt="Win animation" /></td>
+    <td><img src="docs/media/draw.gif" width="220" alt="Draw" /></td>
+  </tr>
+</table>
+
+<p align="center">🎥 <a href="docs/media/demo.mp4">Watch the full demo video</a> (launch → win → new round → draw → reset)</p>
+
+## 📦 Installation
+
+### Android (APK, no store)
+
+1. Download the APK from the [latest release](https://github.com/BOTOOM/pixel_tictactoe/releases/latest):
+   - `pixel_tictactoe-vX.Y.Z-arm64-v8a.apk` → most current phones (recommended).
+   - `pixel_tictactoe-vX.Y.Z-armeabi-v7a.apk` → older 32-bit phones.
+   - `pixel_tictactoe-vX.Y.Z-x86_64.apk` → emulators / Chromebooks.
+   - `pixel_tictactoe-vX.Y.Z-universal.apk` → runs everywhere (heavier).
+2. Open it on the phone and allow *Install unknown apps* for your browser or file manager.
+3. Optional: verify integrity with `sha256sum` against the release's `SHA256SUMS.txt`.
+
+APKs are signed with a dedicated release key, minified (R8) and resource-shrunk.
+
+### iOS
+
+No `.ipa` is published: iOS does not allow installing apps outside the App Store without an Apple Developer account and per-device signing. If you have a Mac with Xcode and a developer account:
+
+```sh
+flutter build ipa --release        # or: flutter run -d <your-iphone>
+```
+
+then deploy the resulting `.ipa` with Xcode / Apple Configurator / TestFlight.
+
+### Web
+
+```sh
+flutter build web --release        # output in build/web
+```
+
+## 🛠️ Development
 
 ```sh
 flutter pub get
-flutter run -d chrome          # web
-flutter run -d emulator-5554   # Android
-flutter test
+flutter run -d chrome              # web
+flutter run -d emulator-5554       # Android emulator
+flutter analyze && flutter test    # lint + tests
 ```
+
+Regenerate the sounds (Python standard library only):
+
+```sh
+python3 tool/gen_sounds.py
+```
+
+### Release builds
+
+`flutter build apk --release` requires a release keystore. Create `android/key.properties` (git-ignored):
+
+```properties
+storeFile=/absolute/path/to/your.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+Without it the release build fails on purpose, so a debug-signed APK is never shipped by accident. For a local, non-distributable release-mode build you can opt in to debug signing with `flutter build apk --release --android-project-arg=allowDebugSigning=true`.
+
+### Layout
+
+```
+lib/
+├── main.dart           # game screen, shake, winning line, controls
+├── game_logic.dart     # immutable GameState: moves, winner, scoreboard, rounds
+├── pixel_widgets.dart  # palette, pixel text/panels/buttons, sprites, background, scanlines
+├── win_animation.dart  # win/draw overlay: flash, confetti, banner with crown
+└── audio.dart          # SFX + background music (audioplayers)
+assets/
+├── fonts/              # Press Start 2P
+└── sounds/             # WAVs generated by tool/gen_sounds.py
+```
+
+## 📄 License
+
+MIT — do whatever you want with it, including beating your little brother.

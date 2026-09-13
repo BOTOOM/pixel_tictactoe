@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+val allowDebugSigning = providers.gradleProperty("allowDebugSigning").orNull == "true"
 
 android {
     namespace = "dev.edwardiaz.pixel_tictactoe"
@@ -29,11 +39,43 @@ android {
         versionName = flutter.versionName
     }
 
+    if (hasReleaseKeystore) {
+        signingConfigs {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+}
+
+// Only release artifacts must be signed with the release key; debug builds
+// keep working without a keystore.
+if (!hasReleaseKeystore && !allowDebugSigning) {
+    gradle.taskGraph.whenReady {
+        if (allTasks.any { it.project == project && it.name.contains("Release") }) {
+            throw GradleException(
+                "Release builds need android/key.properties with a release keystore " +
+                    "(or pass -PallowDebugSigning=true for a local, non-distributable build).",
+            )
         }
     }
 }
