@@ -300,6 +300,7 @@ class BackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
     final paint = Paint()..isAntiAlias = false;
     paint.color = Palette.bg;
     canvas.drawRect(Offset.zero & size, paint);
