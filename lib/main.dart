@@ -79,39 +79,42 @@ class _ModeScreenState extends State<ModeScreen>
           ),
           SafeArea(
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const _Title(),
-                  const SizedBox(height: 36),
-                  PixelPanel(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 26, vertical: 22),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const PixelText('SELECT MODE', size: 12),
-                        const SizedBox(height: 22),
-                        PixelButton(
-                            label: '2 PLAYERS',
-                            onPressed: () => _start(GameMode.twoPlayers)),
-                        const SizedBox(height: 14),
-                        PixelButton(
-                          label: 'VS CPU',
-                          color: Palette.oColor,
-                          shade: Palette.oShade,
-                          onPressed: () => _start(GameMode.vsCpu),
-                        ),
-                        const SizedBox(height: 18),
-                        const PixelText(
-                          'CPU GETS SMARTER EVERY TIME YOU WIN',
-                          size: 8,
-                          color: Palette.inkDim,
-                        ),
-                      ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _Title(),
+                    const SizedBox(height: 36),
+                    PixelPanel(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 26, vertical: 22),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const PixelText('SELECT MODE', size: 12),
+                          const SizedBox(height: 22),
+                          PixelButton(
+                              label: '2 PLAYERS',
+                              onPressed: () => _start(GameMode.twoPlayers)),
+                          const SizedBox(height: 14),
+                          PixelButton(
+                            label: 'VS CPU',
+                            color: Palette.oColor,
+                            shade: Palette.oShade,
+                            onPressed: () => _start(GameMode.vsCpu),
+                          ),
+                          const SizedBox(height: 18),
+                          const PixelText(
+                            'CPU GETS SMARTER EVERY TIME YOU WIN',
+                            size: 8,
+                            color: Palette.inkDim,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -19,8 +19,9 @@ class CpuMove {
 /// 4 PRO     – perfect minimax play (cannot lose), still varied openings.
 /// 5 MASTER  – perfect play that also prefers the fastest win / slowest loss.
 class CpuPlayer {
-  CpuPlayer({this.level = 1, math.Random? random})
-      : _rnd = random ?? math.Random();
+  CpuPlayer({int level = 1, math.Random? random})
+      : _level = level.clamp(minLevel, maxLevel),
+        _rnd = random ?? math.Random();
 
   static const int minLevel = 1;
   static const int maxLevel = 5;
@@ -32,16 +33,19 @@ class CpuPlayer {
     'MASTER',
   ];
 
-  int level;
+  int _level;
   final math.Random _rnd;
+
+  int get level => _level;
+  set level(int v) => _level = v.clamp(minLevel, maxLevel);
 
   String get levelName => levelNames[level - 1];
 
   /// Human beat the CPU: get tougher.
-  void onHumanWin() => level = math.min(maxLevel, level + 1);
+  void onHumanWin() => level += 1;
 
   /// CPU beat the human: ease off a little so the game stays fun.
-  void onCpuWin() => level = math.max(minLevel, level - 1);
+  void onCpuWin() => level -= 1;
 
   static const _corners = [0, 2, 6, 8];
   static const _edges = [1, 3, 5, 7];

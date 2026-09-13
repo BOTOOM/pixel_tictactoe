@@ -114,4 +114,12 @@ void main() {
     cpu.onCpuWin();
     expect(cpu.level, 4);
   });
+
+  test('level is clamped to the valid range', () {
+    expect(CpuPlayer(level: 9).level, 5);
+    expect(CpuPlayer(level: -2).level, 1);
+    final cpu = CpuPlayer();
+    cpu.level = 42;
+    expect(cpu.level, 5);
+  });
 }
