@@ -30,11 +30,13 @@ class WinOverlay extends StatefulWidget {
     required this.winner,
     required this.origin,
     required this.onContinue,
+    this.label,
   });
 
   final Mark? winner; // null => draw
   final Offset origin; // where the fireworks burst from (board centre)
   final VoidCallback onContinue;
+  final String? label; // overrides the default "X WINS!" / "O WINS!" banner
 
   @override
   State<WinOverlay> createState() => _WinOverlayState();
@@ -129,9 +131,8 @@ class _WinOverlayState extends State<WinOverlay>
     final winner = widget.winner;
     final title = winner == null
         ? 'DRAW!'
-        : winner == Mark.x
-            ? 'X WINS!'
-            : 'O WINS!';
+        : (widget.label ??
+            (winner == Mark.x ? 'X WINS!' : 'O WINS!'));
     final accent = winner == null ? Palette.inkDim : Palette.of(winner);
     final accentShade = winner == null ? Palette.panelDark : Palette.shadeOf(winner);
 

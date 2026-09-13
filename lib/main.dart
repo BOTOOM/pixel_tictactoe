@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'ai.dart';
 import 'audio.dart';
 import 'game_logic.dart';
 import 'pixel_widgets.dart';
@@ -27,13 +28,104 @@ class PixelTicTacToeApp extends StatelessWidget {
         fontFamily: pixelFont,
         useMaterial3: true,
       ),
-      home: const GameScreen(),
+      home: const ModeScreen(),
+    );
+  }
+}
+
+enum GameMode { twoPlayers, vsCpu }
+
+class ModeScreen extends StatefulWidget {
+  const ModeScreen({super.key});
+
+  @override
+  State<ModeScreen> createState() => _ModeScreenState();
+}
+
+class _ModeScreenState extends State<ModeScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bg;
+
+  @override
+  void initState() {
+    super.initState();
+    _bg = AnimationController(vsync: this, duration: const Duration(seconds: 60))
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _bg.dispose();
+    super.dispose();
+  }
+
+  void _start(GameMode mode) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => GameScreen(mode: mode)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedBuilder(
+            animation: _bg,
+            builder: (_, __) =>
+                CustomPaint(painter: BackgroundPainter(_bg.value * 60)),
+          ),
+          SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _Title(),
+                  const SizedBox(height: 36),
+                  PixelPanel(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 26, vertical: 22),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const PixelText('SELECT MODE', size: 12),
+                        const SizedBox(height: 22),
+                        PixelButton(
+                            label: '2 PLAYERS',
+                            onPressed: () => _start(GameMode.twoPlayers)),
+                        const SizedBox(height: 14),
+                        PixelButton(
+                          label: 'VS CPU',
+                          color: Palette.oColor,
+                          shade: Palette.oShade,
+                          onPressed: () => _start(GameMode.vsCpu),
+                        ),
+                        const SizedBox(height: 18),
+                        const PixelText(
+                          'CPU GETS SMARTER EVERY TIME YOU WIN',
+                          size: 8,
+                          color: Palette.inkDim,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IgnorePointer(child: CustomPaint(painter: ScanlinePainter())),
+        ],
+      ),
     );
   }
 }
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  const GameScreen({super.key, required this.mode});
+
+  final GameMode mode;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -46,6 +138,9 @@ class _GameScreenState extends State<GameScreen>
   late final AnimationController _win;
   bool _showOverlay = false;
   Timer? _drawTimer;
+  Timer? _cpuTimer;
+  final _cpu = CpuPlayer();
+  String? _cpuTactic;
   final _audio = GameAudio();
   final GlobalKey _boardKey = GlobalKey();
 
@@ -53,6 +148,7 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     _audio.startBgm();
+    _scheduleCpu();
     _bg = AnimationController(vsync: this, duration: const Duration(seconds: 60))
       ..repeat();
     _win = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
@@ -66,6 +162,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _drawTimer?.cancel();
+    _cpuTimer?.cancel();
     _audio.dispose();
     _bg.dispose();
     _win.dispose();
@@ -74,10 +171,23 @@ class _GameScreenState extends State<GameScreen>
 
   void _tap(int i) {
     if (_state.isOver || _state.board[i] != null) return;
+    // In VS CPU mode it's the machine's turn when O is up.
+    if (widget.mode == GameMode.vsCpu && _state.current == Mark.o) return;
+    _applyMove(i);
+  }
+
+  void _applyMove(int i) {
     HapticFeedback.lightImpact();
     final placed = _state.current;
     final next = _state.play(i);
     if (identical(next, _state)) return;
+    if (widget.mode == GameMode.vsCpu && next.winner != null) {
+      if (next.winner == Mark.x) {
+        _cpu.onHumanWin();
+      } else {
+        _cpu.onCpuWin();
+      }
+    }
     _audio.startBgm(); // web autoplay: retry on first gesture
     if (placed == Mark.x) {
       _audio.placeX();
@@ -96,19 +206,46 @@ class _GameScreenState extends State<GameScreen>
         if (mounted && _state.isDraw) setState(() => _showOverlay = true);
       });
     }
+    _scheduleCpu();
+  }
+
+  void _scheduleCpu() {
+    _cpuTimer?.cancel();
+    if (widget.mode != GameMode.vsCpu ||
+        _state.isOver ||
+        _state.current != Mark.o) {
+      return;
+    }
+    _cpuTimer = Timer(const Duration(milliseconds: 550), () {
+      if (!mounted ||
+          widget.mode != GameMode.vsCpu ||
+          _state.isOver ||
+          _state.current != Mark.o) {
+        return;
+      }
+      final m = _cpu.chooseMove(_state);
+      _cpuTactic = m.tactic;
+      _applyMove(m.index);
+    });
   }
 
   void _nextRound() {
     _drawTimer?.cancel();
+    _cpuTimer?.cancel();
+    _cpuTactic = null;
     _win.reset();
     setState(() {
       _showOverlay = false;
       _state = _state.nextRound();
     });
+    _scheduleCpu();
   }
 
   void _resetAll() {
     _drawTimer?.cancel();
+    _cpuTimer?.cancel();
+    _cpuTactic = null;
+    _cpu.level = CpuPlayer.minLevel;
     _win.reset();
     setState(() {
       _showOverlay = false;
@@ -154,9 +291,34 @@ class _GameScreenState extends State<GameScreen>
                       children: [
                         const _Title(),
                         const SizedBox(height: 18),
-                        _ScoreBoard(state: _state),
+                        _ScoreBoard(state: _state, mode: widget.mode),
+                        if (widget.mode == GameMode.vsCpu) ...[
+                          const SizedBox(height: 10),
+                          PixelPanel(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                PixelText(
+                                  'CPU LVL ${_cpu.level} ${_cpu.levelName}',
+                                  size: 9,
+                                  color: Palette.oColor,
+                                ),
+                                if (_cpuTactic != null) ...[
+                                  const SizedBox(height: 4),
+                                  PixelText(
+                                    _cpuTactic!,
+                                    size: 8,
+                                    color: Palette.inkDim,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 18),
-                        _TurnBanner(state: _state),
+                        _TurnBanner(state: _state, mode: widget.mode),
                         const SizedBox(height: 16),
                         KeyedSubtree(
                           key: _boardKey,
@@ -189,6 +351,13 @@ class _GameScreenState extends State<GameScreen>
                                 _audio.setMuted(!_audio.muted);
                               }),
                             ),
+                            PixelButton(
+                              label: 'MENU',
+                              color: Palette.panelLight,
+                              shade: Palette.panelDark,
+                              textColor: Palette.ink,
+                              onPressed: () => Navigator.pop(context),
+                            ),
                           ],
                         ),
                       ],
@@ -204,6 +373,9 @@ class _GameScreenState extends State<GameScreen>
               winner: _state.winner,
               origin: _boardCenter(context),
               onContinue: _nextRound,
+              label: widget.mode == GameMode.vsCpu && _state.winner != null
+                  ? (_state.winner == Mark.x ? 'YOU WIN!' : 'CPU WINS!')
+                  : null,
             ),
         ],
       ),
@@ -236,9 +408,10 @@ class _Title extends StatelessWidget {
 }
 
 class _ScoreBoard extends StatelessWidget {
-  const _ScoreBoard({required this.state});
+  const _ScoreBoard({required this.state, required this.mode});
 
   final GameState state;
+  final GameMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -254,9 +427,11 @@ class _ScoreBoard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          score('X', state.scoreX, Palette.xColor, Palette.xShade),
+          score(mode == GameMode.vsCpu ? 'YOU' : 'X', state.scoreX,
+              Palette.xColor, Palette.xShade),
           score('DRAW', state.draws, Palette.inkDim, Palette.panelDark),
-          score('O', state.scoreO, Palette.oColor, Palette.oShade),
+          score(mode == GameMode.vsCpu ? 'CPU' : 'O', state.scoreO,
+              Palette.oColor, Palette.oShade),
         ],
       ),
     );
@@ -264,22 +439,28 @@ class _ScoreBoard extends StatelessWidget {
 }
 
 class _TurnBanner extends StatelessWidget {
-  const _TurnBanner({required this.state});
+  const _TurnBanner({required this.state, required this.mode});
 
   final GameState state;
+  final GameMode mode;
 
   @override
   Widget build(BuildContext context) {
     final String text;
     final Color color;
+    final vsCpu = mode == GameMode.vsCpu;
     if (state.winner != null) {
-      text = 'PLAYER ${state.winner == Mark.x ? 'X' : 'O'} WINS';
+      text = vsCpu
+          ? (state.winner == Mark.x ? 'YOU WIN' : 'CPU WINS')
+          : 'PLAYER ${state.winner == Mark.x ? 'X' : 'O'} WINS';
       color = Palette.of(state.winner!);
     } else if (state.isDraw) {
       text = 'IT\'S A DRAW';
       color = Palette.inkDim;
     } else {
-      text = 'PLAYER ${state.current == Mark.x ? 'X' : 'O'} TURN';
+      text = vsCpu
+          ? (state.current == Mark.x ? 'YOUR TURN' : 'CPU THINKING...')
+          : 'PLAYER ${state.current == Mark.x ? 'X' : 'O'} TURN';
       color = Palette.of(state.current);
     }
     return Row(
