@@ -2,6 +2,8 @@
 
 # 🕹️ Pixel Tic-Tac-Toe
 
+<img src="docs/media/icon.png" width="96" alt="App icon" />
+
 **Tic-tac-toe in Flutter with pixel-art looks, chiptune sound and an over-the-top victory celebration.**
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
@@ -98,6 +100,12 @@ Regenerate the sounds (Python standard library only):
 
 ```sh
 python3 tool/gen_sounds.py
+```
+
+Regenerate the app icons — Android launcher + adaptive foreground, web favicon/icons and `docs/media/icon.png` (requires Pillow):
+
+```sh
+python3 tool/gen_icon.py
 ```
 
 ### Release builds
